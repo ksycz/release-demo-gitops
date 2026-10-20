@@ -5,7 +5,7 @@ metadata:
   labels:
     app: release-demo
 spec:
-  replicas: 2
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: release-demo
@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
         - name: release-demo
-          image: ghcr.io/ksycz/release-demo-app:main
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           ports:
             - containerPort: 8080
