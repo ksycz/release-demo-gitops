@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: release-demo-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/ksycz/release-demo-gitops.git
+    targetRevision: main
+    path: chart
+    helm:
+      valueFiles:
+        - ../env/dev/values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: release-demo-dev
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
