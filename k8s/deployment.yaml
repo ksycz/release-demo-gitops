@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-demo
+  labels:
+    app: release-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: release-demo
+  template:
+    metadata:
+      labels:
+        app: release-demo
+    spec:
+      containers:
+        - name: release-demo
+          image: ghcr.io/ksycz/release-demo-app:main
+          ports:
+            - containerPort: 8080
