@@ -1,4 +1,4 @@
 replicaCount: 2
 
 image:
-  tag: main
+  tag: 0.1.0
