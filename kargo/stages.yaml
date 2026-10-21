@@ -1,0 +1,145 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: dev
+  namespace: release-demo
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: release-demo
+      sources:
+        direct: true
+  promotionTemplate:
+    spec:
+      vars:
+        - name: gitopsRepo
+          value: https://github.com/ksycz/release-demo-gitops.git
+        - name: imageRepo
+          value: ghcr.io/ksycz/release-demo-app
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.gitopsRepo }}
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: yaml-update
+          config:
+            path: ./repo/env/${{ ctx.stage }}/values.yaml
+            updates:
+              - key: image.tag
+                value: ${{ imageFrom(vars.imageRepo).Tag }}
+        - uses: git-commit
+          as: commit
+          config:
+            path: ./repo
+            message: Promote release-demo ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}
+        - uses: git-push
+          config:
+            path: ./repo
+        - uses: argocd-update
+          config:
+            apps:
+              - name: release-demo-${{ ctx.stage }}
+                sources:
+                  - repoURL: ${{ vars.gitopsRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: staging
+  namespace: release-demo
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: release-demo
+      sources:
+        stages:
+          - dev
+  promotionTemplate:
+    spec:
+      vars:
+        - name: gitopsRepo
+          value: https://github.com/ksycz/release-demo-gitops.git
+        - name: imageRepo
+          value: ghcr.io/ksycz/release-demo-app
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.gitopsRepo }}
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: yaml-update
+          config:
+            path: ./repo/env/${{ ctx.stage }}/values.yaml
+            updates:
+              - key: image.tag
+                value: ${{ imageFrom(vars.imageRepo).Tag }}
+        - uses: git-commit
+          as: commit
+          config:
+            path: ./repo
+            message: Promote release-demo ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}
+        - uses: git-push
+          config:
+            path: ./repo
+        - uses: argocd-update
+          config:
+            apps:
+              - name: release-demo-${{ ctx.stage }}
+                sources:
+                  - repoURL: ${{ vars.gitopsRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
+---
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Stage
+metadata:
+  name: prod
+  namespace: release-demo
+spec:
+  requestedFreight:
+    - origin:
+        kind: Warehouse
+        name: release-demo
+      sources:
+        stages:
+          - staging
+  promotionTemplate:
+    spec:
+      vars:
+        - name: gitopsRepo
+          value: https://github.com/ksycz/release-demo-gitops.git
+        - name: imageRepo
+          value: ghcr.io/ksycz/release-demo-app
+      steps:
+        - uses: git-clone
+          config:
+            repoURL: ${{ vars.gitopsRepo }}
+            checkout:
+              - branch: main
+                path: ./repo
+        - uses: yaml-update
+          config:
+            path: ./repo/env/${{ ctx.stage }}/values.yaml
+            updates:
+              - key: image.tag
+                value: ${{ imageFrom(vars.imageRepo).Tag }}
+        - uses: git-commit
+          as: commit
+          config:
+            path: ./repo
+            message: Promote release-demo ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}
+        - uses: git-push
+          config:
+            path: ./repo
+        - uses: argocd-update
+          config:
+            apps:
+              - name: release-demo-${{ ctx.stage }}
+                sources:
+                  - repoURL: ${{ vars.gitopsRepo }}
+                    desiredRevision: ${{ outputs.commit.commit }}
