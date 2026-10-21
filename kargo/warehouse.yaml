@@ -1,0 +1,11 @@
+apiVersion: kargo.akuity.io/v1alpha1
+kind: Warehouse
+metadata:
+  name: release-demo
+  namespace: release-demo
+spec:
+  subscriptions:
+    - image:
+        repoURL: ghcr.io/ksycz/release-demo-app
+        constraint: ^0
+        discoveryLimit: 5
