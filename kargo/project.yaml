@@ -1,15 +1,18 @@
-apiVersion: kargo.akuity.io/v1alpha1
+# Kargo Project: Kargo's folder for one app. Everything else (Warehouse, Stages, credentials) belongs to it.
+apiVersion: kargo.akuity.io/v1alpha1            # Kargo's API group; "v1alpha1" = the API may still change
 kind: Project
 metadata:
-  name: release-demo
----
+  name: release-demo                            # also creates a Kubernetes namespace with this name
+---                                             # separates two objects in one file
+# Settings for the Project. Must have the same name as the Project.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: ProjectConfig
 metadata:
   name: release-demo
-  namespace: release-demo
+  namespace: release-demo                       # the Project's namespace
 spec:
-  promotionPolicies:
+  promotionPolicies:                            # which Stages promote automatically
     - stageSelector:
-        name: dev
-      autoPromotionEnabled: true
+        name: dev                               # only dev: it has no customers, so automatic is safe
+      autoPromotionEnabled: true                # new Freight goes to dev without anyone clicking "Promote"
+                                                # staging and prod aren't listed, so they wait for a person

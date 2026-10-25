@@ -1,26 +1,29 @@
-apiVersion: apps/v1
+# Deployment: keeps a number of identical Pods running from one image.
+# The double-curly-brace parts are Helm blanks, filled from chart/values.yaml and env/<stage>/values.yaml.
+# (Don't write double curly braces in comments in this folder: Helm would try to fill them in.)
+apiVersion: apps/v1                             # Deployments belong to the "apps" API group, version v1
 kind: Deployment
 metadata:
-  name: release-demo
+  name: release-demo                            # the Deployment's name
   labels:
-    app: release-demo
+    app: release-demo                           # a name tag on the Deployment itself
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.replicaCount }}          # how many Pods to keep running
   selector:
     matchLabels:
-      app: release-demo
-  template:
+      app: release-demo                         # "the Pods I manage carry this label"; must match the template's labels below
+  template:                                     # blueprint for every Pod
     metadata:
       labels:
-        app: release-demo
+        app: release-demo                       # label on each Pod; the selector above and the Service use it to find Pods
     spec:
-      containers:
-        - name: release-demo
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+      containers:                               # what runs inside each Pod (a list; usually one container)
+        - name: release-demo                    # the container's name
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"   # full image name, e.g. ghcr.io/ksycz/release-demo-app:0.2.1
           ports:
-            - containerPort: 8080
+            - containerPort: 8080               # the port the app listens on inside the container
 
-          readinessProbe:
+          readinessProbe:                       # health check: send traffic to a Pod only once this passes
             httpGet:
-              path: /health
-              port: 8080
+              path: /health                     # Kubernetes calls GET /health …
+              port: 8080                        # … on this port; an answer of 200 means "ready"

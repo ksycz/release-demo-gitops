@@ -1,10 +1,12 @@
-apiVersion: v1
+# Service: a stable name and address in front of the Pods, which come and go.
+# Inside the cluster it's reachable as release-demo.<namespace>.svc.cluster.local.
+apiVersion: v1                                  # Services are in Kubernetes' core API, version v1
 kind: Service
 metadata:
-  name: release-demo
+  name: release-demo                            # the Service's name (also its DNS name)
 spec:
   selector:
-    app: release-demo
+    app: release-demo                           # send traffic to Pods carrying this label
   ports:
-    - port: 80
-      targetPort: 8080
+    - port: 80                                  # the port the Service listens on
+      targetPort: 8080                          # the port on the Pods where traffic is delivered

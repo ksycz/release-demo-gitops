@@ -1,5 +1,8 @@
-replicaCount: 2
+# Default values for the chart's templates.
+# Helm reads this file first; env/<stage>/values.yaml is read afterwards and wins where both set a value.
+
+replicaCount: 2                                 # how many Pods to run (fills "replicas" in the Deployment)
 
 image:
-  repository: ghcr.io/ksycz/release-demo-app
-  tag: main
+  repository: ghcr.io/ksycz/release-demo-app    # the image, WITHOUT a tag (registry/owner/name)
+  tag: main                                     # default tag; every environment overrides it with a fixed version

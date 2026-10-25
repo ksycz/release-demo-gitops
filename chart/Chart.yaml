@@ -1,6 +1,7 @@
-apiVersion: v2
-name: release-demo
+# Describes the Helm chart itself (the packaging), not the app inside it.
+apiVersion: v2                                  # chart format version; Helm 3 and 4 both use v2
+name: release-demo                              # the chart's name
 description: Helm chart for the release-demo app
-type: application
-version: 0.2.0
-appVersion: "0.1.0"
+type: application                               # a chart that installs an app (the other type is "library")
+version: 0.2.0                                  # the CHART's version: increase it when templates change
+appVersion: "0.1.0"                             # the APP's version, for information only (each environment's real tag is in env/<stage>/values.yaml)

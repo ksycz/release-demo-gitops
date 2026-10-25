@@ -1,18 +1,21 @@
+# Root Application ("app of apps"): watches the argocd/ folder and creates every Application in it.
+# The only thing applied by hand, once, on a new cluster:  kubectl apply -f bootstrap/root.yaml
+# It lives outside argocd/ so it doesn't watch itself.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: root
-  namespace: argocd
+  name: root                                    # the Application's name in the Argo CD page
+  namespace: argocd                             # Application objects live in Argo CD's namespace
 spec:
-  project: default
+  project: default                              # Argo CD's permission group; "default" allows everything
   source:
-    repoURL: https://github.com/ksycz/release-demo-gitops.git
-    targetRevision: main
-    path: argocd
+    repoURL: https://github.com/ksycz/release-demo-gitops.git   # WHICH Git repo to read
+    targetRevision: main                        # which branch to follow
+    path: argocd                                # which folder: plain YAML files (no chart), so no helm: section
   destination:
-    server: https://kubernetes.default.svc
-    namespace: argocd
+    server: https://kubernetes.default.svc      # the cluster Argo CD runs in
+    namespace: argocd                           # it installs Application objects, which belong in argocd
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    automated:                                  # sync by itself whenever Git changes
+      prune: true                               # an Application file deleted from Git -> Application deleted
+      selfHeal: true                            # changes made by hand -> changed back to match Git

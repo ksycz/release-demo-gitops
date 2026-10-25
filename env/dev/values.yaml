@@ -1,4 +1,6 @@
-replicaCount: 2
+# Values for dev: only what differs from chart/values.yaml.
+replicaCount: 2                                 # Pods in dev
 
 image:
-  tag: 0.2.1
+  tag: 0.2.1                                    # app version running in dev; Kargo changes this line on every promotion
+

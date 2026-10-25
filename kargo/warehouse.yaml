@@ -1,11 +1,14 @@
+# Warehouse: watches the image repository and creates Freight for every new version it finds.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Warehouse
 metadata:
-  name: release-demo
-  namespace: release-demo
+  name: release-demo                            # the Stages refer to the Warehouse by this name
+  namespace: release-demo                       # the Kargo Project's namespace
 spec:
-  subscriptions:
+  subscriptions:                                # what to watch (a list: images, Git repos, Helm charts)
     - image:
-        repoURL: ghcr.io/ksycz/release-demo-app
-        constraint: ^0
-        discoveryLimit: 5
+        repoURL: ghcr.io/ksycz/release-demo-app # the image, WITHOUT a tag
+        constraint: ^0                          # which versions count: any 0.x.x, stops before 1.0.0
+                                                # (^0.1.0 would allow only 0.1.x). Tags that aren't full
+                                                # MAJOR.MINOR.PATCH (main, commit IDs, 0.2) are ignored.
+        discoveryLimit: 5                       # offer only the 5 newest matching versions

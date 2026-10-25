@@ -1,25 +1,27 @@
-apiVersion: argoproj.io/v1alpha1
+# Argo CD Application for dev: "take this from Git and keep it running there in the cluster".
+# Created by the root Application (bootstrap/root.yaml), which watches this folder.
+apiVersion: argoproj.io/v1alpha1                # Argo CD's API group (added by its CRDs)
 kind: Application
 metadata:
-  name: release-demo-dev
-  namespace: argocd
+  name: release-demo-dev                        # the Application's name, as shown in the Argo CD page
+  namespace: argocd                             # Application objects live in Argo CD's own namespace
   annotations:
-    kargo.akuity.io/authorized-stage: release-demo:dev
+    kargo.akuity.io/authorized-stage: release-demo:dev   # allows only the Kargo Stage "dev" (project "release-demo") to sync this app
 spec:
-  project: default
+  project: default                              # Argo CD's permission group; "default" allows everything
   source:
-    repoURL: https://github.com/ksycz/release-demo-gitops.git
-    targetRevision: main
-    path: chart
+    repoURL: https://github.com/ksycz/release-demo-gitops.git   # WHICH Git repo to read
+    targetRevision: main                        # which branch to follow
+    path: chart                                 # which folder in the repo holds the Helm chart
     helm:
       valueFiles:
-        - ../env/dev/values.yaml
+        - ../env/dev/values.yaml               # extra values, relative to "path"; ".." = one folder up
   destination:
-    server: https://kubernetes.default.svc
-    namespace: release-demo-dev
+    server: https://kubernetes.default.svc      # which cluster: the one Argo CD itself runs in
+    namespace: release-demo-dev                 # where the app is installed
   syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
+    automated:                                  # sync by itself whenever Git changes
+      prune: true                               # removed from Git -> removed from the cluster
+      selfHeal: true                            # changed by hand in the cluster -> changed back to match Git
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=true                    # create the namespace if it doesn't exist
