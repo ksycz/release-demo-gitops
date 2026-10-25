@@ -1,136 +1,145 @@
+# Kargo Stages: one per environment. A Stage says where its Freight comes from and how to promote it.
+# The three Stages are identical except for their name and "sources".
+# ${{ ... }} are Kargo expressions, filled in while a promotion runs.
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
-  name: dev
-  namespace: release-demo
+  name: dev                                     # the Stage's name; ${{ ctx.stage }} below becomes this
+  namespace: release-demo                       # the Kargo Project's namespace
 spec:
-  requestedFreight:
+  requestedFreight:                             # which Freight this Stage accepts
     - origin:
         kind: Warehouse
-        name: release-demo
-      sources:
-        direct: true
-  promotionTemplate:
+        name: release-demo                      # Freight made by this Warehouse
+      sources:                                  # where it may come from
+        direct: true                          # take new Freight straight from the Warehouse
+  promotionTemplate:                            # the steps that run on every promotion to this Stage
     spec:
-      vars:
+      vars:                                     # variables: names for values used several times below
         - name: gitopsRepo
           value: https://github.com/ksycz/release-demo-gitops.git
         - name: imageRepo
           value: ghcr.io/ksycz/release-demo-app
       steps:
-        - uses: git-clone
+        - uses: git-clone                       # 1. download the gitops repo
           config:
             repoURL: ${{ vars.gitopsRepo }}
             checkout:
               - branch: main
-                path: ./repo
-        - uses: yaml-update
+                path: ./repo                    # into a temporary folder called ./repo
+        - uses: yaml-update                     # 2. change one value in a YAML file
           config:
-            path: ./repo/env/${{ ctx.stage }}/values.yaml
+            path: ./repo/env/${{ ctx.stage }}/values.yaml   # this Stage's values file
             updates:
-              - key: image.tag
-                value: ${{ imageFrom(vars.imageRepo).Tag }}
-        - uses: git-commit
-          as: commit
+              - key: image.tag                  # the field "tag" inside "image"
+                value: ${{ imageFrom(vars.imageRepo).Tag }}   # the version being promoted, e.g. 0.2.1
+        - uses: git-commit                      # 3. commit the change
+          as: commit                            # name this step so later steps can use its result
           config:
             path: ./repo
             message: Promote release-demo ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}
-        - uses: git-push
+        - uses: git-push                        # 4. push the commit to GitHub (uses the gitops-repo credentials)
           config:
             path: ./repo
-        - uses: argocd-update
+        - uses: argocd-update                   # 5. ask Argo CD to sync now instead of waiting for its next check
           config:
             apps:
-              - name: release-demo-${{ ctx.stage }}
----
+              - name: release-demo-${{ ctx.stage }}   # this Stage's Argo CD Application
+                # No desiredRevision: all Stages commit to the same branch, so pinning one commit
+                # would make the other Stages look out of date (see README, Design decisions).
+---                                             # next Stage
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
-  name: staging
-  namespace: release-demo
+  name: staging                                     # the Stage's name; ${{ ctx.stage }} below becomes this
+  namespace: release-demo                       # the Kargo Project's namespace
 spec:
-  requestedFreight:
+  requestedFreight:                             # which Freight this Stage accepts
     - origin:
         kind: Warehouse
-        name: release-demo
-      sources:
-        stages:
-          - dev
-  promotionTemplate:
+        name: release-demo                      # Freight made by this Warehouse
+      sources:                                  # where it may come from
+        stages:                               # take only Freight that has passed …
+          - dev                               # … the dev Stage
+  promotionTemplate:                            # the steps that run on every promotion to this Stage
     spec:
-      vars:
+      vars:                                     # variables: names for values used several times below
         - name: gitopsRepo
           value: https://github.com/ksycz/release-demo-gitops.git
         - name: imageRepo
           value: ghcr.io/ksycz/release-demo-app
       steps:
-        - uses: git-clone
+        - uses: git-clone                       # 1. download the gitops repo
           config:
             repoURL: ${{ vars.gitopsRepo }}
             checkout:
               - branch: main
-                path: ./repo
-        - uses: yaml-update
+                path: ./repo                    # into a temporary folder called ./repo
+        - uses: yaml-update                     # 2. change one value in a YAML file
           config:
-            path: ./repo/env/${{ ctx.stage }}/values.yaml
+            path: ./repo/env/${{ ctx.stage }}/values.yaml   # this Stage's values file
             updates:
-              - key: image.tag
-                value: ${{ imageFrom(vars.imageRepo).Tag }}
-        - uses: git-commit
-          as: commit
+              - key: image.tag                  # the field "tag" inside "image"
+                value: ${{ imageFrom(vars.imageRepo).Tag }}   # the version being promoted, e.g. 0.2.1
+        - uses: git-commit                      # 3. commit the change
+          as: commit                            # name this step so later steps can use its result
           config:
             path: ./repo
             message: Promote release-demo ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}
-        - uses: git-push
+        - uses: git-push                        # 4. push the commit to GitHub (uses the gitops-repo credentials)
           config:
             path: ./repo
-        - uses: argocd-update
+        - uses: argocd-update                   # 5. ask Argo CD to sync now instead of waiting for its next check
           config:
             apps:
-              - name: release-demo-${{ ctx.stage }}
----
+              - name: release-demo-${{ ctx.stage }}   # this Stage's Argo CD Application
+                # No desiredRevision: all Stages commit to the same branch, so pinning one commit
+                # would make the other Stages look out of date (see README, Design decisions).
+---                                             # next Stage
 apiVersion: kargo.akuity.io/v1alpha1
 kind: Stage
 metadata:
-  name: prod
-  namespace: release-demo
+  name: prod                                     # the Stage's name; ${{ ctx.stage }} below becomes this
+  namespace: release-demo                       # the Kargo Project's namespace
 spec:
-  requestedFreight:
+  requestedFreight:                             # which Freight this Stage accepts
     - origin:
         kind: Warehouse
-        name: release-demo
-      sources:
-        stages:
-          - staging
-  promotionTemplate:
+        name: release-demo                      # Freight made by this Warehouse
+      sources:                                  # where it may come from
+        stages:                               # take only Freight that has passed …
+          - staging                           # … the staging Stage
+  promotionTemplate:                            # the steps that run on every promotion to this Stage
     spec:
-      vars:
+      vars:                                     # variables: names for values used several times below
         - name: gitopsRepo
           value: https://github.com/ksycz/release-demo-gitops.git
         - name: imageRepo
           value: ghcr.io/ksycz/release-demo-app
       steps:
-        - uses: git-clone
+        - uses: git-clone                       # 1. download the gitops repo
           config:
             repoURL: ${{ vars.gitopsRepo }}
             checkout:
               - branch: main
-                path: ./repo
-        - uses: yaml-update
+                path: ./repo                    # into a temporary folder called ./repo
+        - uses: yaml-update                     # 2. change one value in a YAML file
           config:
-            path: ./repo/env/${{ ctx.stage }}/values.yaml
+            path: ./repo/env/${{ ctx.stage }}/values.yaml   # this Stage's values file
             updates:
-              - key: image.tag
-                value: ${{ imageFrom(vars.imageRepo).Tag }}
-        - uses: git-commit
-          as: commit
+              - key: image.tag                  # the field "tag" inside "image"
+                value: ${{ imageFrom(vars.imageRepo).Tag }}   # the version being promoted, e.g. 0.2.1
+        - uses: git-commit                      # 3. commit the change
+          as: commit                            # name this step so later steps can use its result
           config:
             path: ./repo
             message: Promote release-demo ${{ imageFrom(vars.imageRepo).Tag }} to ${{ ctx.stage }}
-        - uses: git-push
+        - uses: git-push                        # 4. push the commit to GitHub (uses the gitops-repo credentials)
           config:
             path: ./repo
-        - uses: argocd-update
+        - uses: argocd-update                   # 5. ask Argo CD to sync now instead of waiting for its next check
           config:
             apps:
-              - name: release-demo-${{ ctx.stage }}
+              - name: release-demo-${{ ctx.stage }}   # this Stage's Argo CD Application
+                # No desiredRevision: all Stages commit to the same branch, so pinning one commit
+                # would make the other Stages look out of date (see README, Design decisions).

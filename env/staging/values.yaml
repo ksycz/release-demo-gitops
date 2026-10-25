@@ -1,4 +1,6 @@
-replicaCount: 2
+# Values for staging: only what differs from chart/values.yaml.
+replicaCount: 2                                 # Pods in staging
 
 image:
-  tag: 0.2.0
+  tag: 0.2.0                                    # app version running in staging; Kargo changes this line on every promotion
+

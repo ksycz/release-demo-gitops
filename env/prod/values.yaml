@@ -1,4 +1,6 @@
-replicaCount: 3
+# Values for prod: only what differs from chart/values.yaml.
+replicaCount: 3                                 # Pods in prod (more copies, so it keeps working if one fails)
 
 image:
-  tag: 0.1.0
+  tag: 0.1.0                                    # app version running in prod; Kargo changes this line on every promotion
+
